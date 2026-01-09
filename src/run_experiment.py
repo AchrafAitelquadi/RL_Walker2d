@@ -278,18 +278,20 @@ def train_agent(env_name, use_eas, max_timesteps, eval_freq, seed,
                 pass
             
             elif config.VERBOSE == 1:  # Minimal: évaluation courte
+                algo_name = 'EAS-TD3' if use_eas else 'TD3'
                 progress = (t + 1) / max_timesteps * 100
-                print(f"\nEval [{t+1:,}/{max_timesteps:,}]: {eval_reward:.2f} +/- {eval_std:.2f} ({progress:.1f}%)\n")
+                print(f"\n[{algo_name}] Eval [{t+1:,}/{max_timesteps:,}]: {eval_reward:.2f} +/- {eval_std:.2f} ({progress:.1f}%)\n")
             
             elif config.VERBOSE >= 2:  # Normal ou Détaillé: rapport complet
                 # Calculer statistiques supplémentaires
+                algo_name = 'EAS-TD3' if use_eas else 'TD3'
                 elapsed = time.time() - start_time
                 progress = (t + 1) / max_timesteps * 100
                 timesteps_per_sec = (t + 1) / elapsed if elapsed > 0 else 0
                 eta = (max_timesteps - (t + 1)) / timesteps_per_sec if timesteps_per_sec > 0 else 0
                 
                 print(f"\n{'='*70}")
-                print(f"EVALUATION REPORT - Timestep {t+1:,}/{max_timesteps:,} ({progress:.1f}%)")
+                print(f"[{algo_name}] EVALUATION REPORT - Timestep {t+1:,}/{max_timesteps:,} ({progress:.1f}%)")
                 print(f"{'='*70}")
                 
                 # Performance
