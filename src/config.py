@@ -79,14 +79,14 @@ def validate_config():
     """Valide la configuration"""
     if not TRAIN_TD3 and not TRAIN_EAS_TD3:
         raise ValueError(
-            "❌ Erreur de configuration!\n"
+            "ERROR: Configuration invalide!\n"
             "Au moins un algorithme doit être activé.\n"
             "Activez TRAIN_TD3 ou TRAIN_EAS_TD3 (ou les deux) dans config.py"
         )
     
     if MAX_TIMESTEPS < START_TIMESTEPS:
         raise ValueError(
-            f"❌ MAX_TIMESTEPS ({MAX_TIMESTEPS}) doit être >= "
+            f"ERROR: MAX_TIMESTEPS ({MAX_TIMESTEPS}) doit être >= "
             f"START_TIMESTEPS ({START_TIMESTEPS})"
         )
     
@@ -96,26 +96,26 @@ def validate_config():
 def print_config():
     """Affiche la configuration actuelle"""
     print("\n" + "="*70)
-    print("📋 CONFIGURATION")
+    print("CONFIGURATION")
     print("="*70)
-    print(f"\n🎮 Environnement:")
+    print(f"\nEnvironnement:")
     print(f"   {ENV_NAME}")
-    print(f"\n🤖 Algorithmes à entraîner:")
-    print(f"   TD3:     {'✓' if TRAIN_TD3 else '✗'}")
-    print(f"   EAS-TD3: {'✓' if TRAIN_EAS_TD3 else '✗'}")
-    print(f"\n⏱️  Entraînement:")
+    print(f"\nAlgorithmes a entrainer:")
+    print(f"   TD3:     {'[X]' if TRAIN_TD3 else '[ ]'}")
+    print(f"   EAS-TD3: {'[X]' if TRAIN_EAS_TD3 else '[ ]'}")
+    print(f"\nEntrainement:")
     print(f"   Max timesteps: {MAX_TIMESTEPS:,} par algorithme")
     print(f"   Eval frequency: {EVAL_FREQ:,}")
     print(f"   Batch size: {BATCH_SIZE}")
     print(f"   Seed: {SEED}")
     
     if TRAIN_EAS_TD3:
-        print(f"\n🧬 EAS (PSO):")
+        print(f"\nEAS (PSO):")
         print(f"   Population: {PSO_POP_SIZE}")
         print(f"   Iterations: {PSO_ITERATIONS}")
-        print(f"   ω={PSO_OMEGA}, c1={PSO_C1}, c2={PSO_C2}")
+        print(f"   omega={PSO_OMEGA}, c1={PSO_C1}, c2={PSO_C2}")
     
-    print(f"\n💾 Sauvegarde:")
+    print(f"\nSauvegarde:")
     print(f"   Models: {SAVE_DIR}/")
     print(f"   Logs: {LOG_DIR}/")
     print(f"   Figures: {FIG_DIR}/")

@@ -129,7 +129,7 @@ def train_agent(env_name, use_eas, max_timesteps, eval_freq, seed,
     np.random.seed(seed)
     
     state_dim = env.observation_space.shape[0]
-    action_dim = env.observation_space.shape[0]
+    action_dim = env.action_space.shape[0]
     max_action = float(env.action_space.high[0])
     
     if config.VERBOSE:
