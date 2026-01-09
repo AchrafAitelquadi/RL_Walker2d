@@ -132,15 +132,40 @@ def train_agent(env_name, use_eas, max_timesteps, eval_freq, seed,
     action_dim = env.action_space.shape[0]
     max_action = float(env.action_space.high[0])
     
-    if config.VERBOSE:
+    # Affichage selon niveau de verbosité
+    if config.VERBOSE >= 2:  # Normal ou Détaillé
         print(f"\n{'='*70}")
         print(f"Training {'EAS-' if use_eas else ''}TD3 on {env_name}")
         print(f"{'='*70}")
-        print(f"State dimension: {state_dim}")
-        print(f"Action dimension: {action_dim}")
-        print(f"Max action: {max_action}")
-        print(f"Max timesteps: {max_timesteps:,}")
-        print(f"Seed: {seed}")
+        print(f"\nEnvironment Information:")
+        print(f"  State dimension: {state_dim}")
+        print(f"  Action dimension: {action_dim}")
+        print(f"  Max action: {max_action}")
+    
+    if config.VERBOSE >= 3:  # Détaillé
+        print(f"\nNetwork Architecture:")
+        print(f"  Actor:  [{state_dim}] -> [400] -> [300] -> [{action_dim}]")
+        print(f"  Critic: [{state_dim + action_dim}] -> [400] -> [300] -> [1] (x2)")
+        print(f"  Activation: ReLU (hidden), Tanh (actor output)")
+        print(f"  Optimizer: Adam (lr={config.LEARNING_RATE})")
+        
+        print(f"\nTraining Parameters:")
+        print(f"  Max timesteps: {max_timesteps:,}")
+        print(f"  Batch size: {config.BATCH_SIZE}")
+        print(f"  Discount (gamma): {config.DISCOUNT}")
+        print(f"  Tau (soft update): {config.TAU}")
+        print(f"  Policy update freq: every {config.POLICY_FREQ} critic updates")
+        print(f"  Seed: {seed}")
+        
+        if use_eas:
+            print(f"\nEAS Configuration:")
+            print(f"  PSO Population: {config.PSO_POP_SIZE}")
+            print(f"  PSO Iterations: {config.PSO_ITERATIONS}")
+            print(f"  Inertia (omega): {config.PSO_OMEGA}")
+            print(f"  Cognitive (c1): {config.PSO_C1}")
+            print(f"  Social (c2): {config.PSO_C2}")
+    
+    if config.VERBOSE >= 2:
         print(f"{'='*70}\n")
     
     # Agent et buffers
@@ -216,11 +241,18 @@ def train_agent(env_name, use_eas, max_timesteps, eval_freq, seed,
         
         if done:
             logger.log_episode(episode_reward)
-            if config.VERBOSE:
+            
+            # Déterminer si l'épisode est un succès (basé sur la récompense)
+            success = "SUCCESS" if episode_reward > 1000 else "FAILED"
+            success_symbol = "[+]" if episode_reward > 1000 else "[-]"
+            
+            if config.VERBOSE >= 2:  # Normal ou Détaillé
                 # Nettoyer la barre de progression avant le print
                 print('\r' + ' ' * 120 + '\r', end='')
-                print(f"Episode {episode_num+1} | Timestep: {t+1:,} | Reward: {episode_reward:.2f} | "
-                      f"Avg(100): {np.mean(logger.episode_rewards[-100:]):.2f}")
+                avg_reward = np.mean(logger.episode_rewards[-100:]) if logger.episode_rewards else episode_reward
+                print(f"Episode {episode_num+1:4d} | Steps: {episode_timesteps:4d} | "
+                      f"Reward: {episode_reward:7.2f} | Avg(100): {avg_reward:7.2f} | {success_symbol} {success}")
+            
             state, _ = env.reset()
             episode_reward = 0
             episode_timesteps = 0
@@ -229,7 +261,7 @@ def train_agent(env_name, use_eas, max_timesteps, eval_freq, seed,
         # Afficher barre de progression périodiquement
         current_time = time.time()
         if current_time - last_print_time >= print_interval or t == max_timesteps - 1:
-            if not config.VERBOSE:
+            if config.VERBOSE == 1:  # Minimal: barre de progression
                 print_progress_bar(t + 1, max_timesteps, start_time, 
                                  prefix=f"{'EAS-' if use_eas else ''}TD3")
             last_print_time = current_time
@@ -239,29 +271,89 @@ def train_agent(env_name, use_eas, max_timesteps, eval_freq, seed,
             eval_reward, eval_std = evaluate_policy(agent, eval_env, seed)
             logger.log_eval(t + 1, eval_reward, eval_std)
             
-            # Nettoyer la ligne et afficher l'évaluation
+            # Nettoyer la ligne
             print('\r' + ' ' * 120 + '\r', end='')
-            print(f"\n{'='*70}")
-            print(f"EVALUATION at {t+1:,}/{max_timesteps:,} timesteps ({(t+1)/max_timesteps*100:.1f}%)")
-            print(f"{'='*70}")
-            print(f"   Eval Reward: {eval_reward:.2f} ± {eval_std:.2f}")
-            if logger.episode_rewards:
-                print(f"   Train Reward (last 100 eps): {np.mean(logger.episode_rewards[-100:]):.2f}")
-            if use_eas and logger.archive_sizes:
-                print(f"   Archive Size: {logger.archive_sizes[-1]:,}")
-                if logger.pso_improvements:
-                    print(f"   PSO Improvement: {logger.pso_improvements[-1]:.4f}")
-            elapsed = time.time() - start_time
-            print(f"   Elapsed Time: {format_time(elapsed)}")
-            print(f"{'='*70}\n")
+            
+            if config.VERBOSE == 0:  # Silencieux: rien
+                pass
+            
+            elif config.VERBOSE == 1:  # Minimal: évaluation courte
+                progress = (t + 1) / max_timesteps * 100
+                print(f"\nEval [{t+1:,}/{max_timesteps:,}]: {eval_reward:.2f} +/- {eval_std:.2f} ({progress:.1f}%)\n")
+            
+            elif config.VERBOSE >= 2:  # Normal ou Détaillé: rapport complet
+                # Calculer statistiques supplémentaires
+                elapsed = time.time() - start_time
+                progress = (t + 1) / max_timesteps * 100
+                timesteps_per_sec = (t + 1) / elapsed if elapsed > 0 else 0
+                eta = (max_timesteps - (t + 1)) / timesteps_per_sec if timesteps_per_sec > 0 else 0
+                
+                print(f"\n{'='*70}")
+                print(f"EVALUATION REPORT - Timestep {t+1:,}/{max_timesteps:,} ({progress:.1f}%)")
+                print(f"{'='*70}")
+                
+                # Performance
+                print(f"\nPerformance Metrics:")
+                print(f"  Eval Reward (10 eps):     {eval_reward:8.2f} +/- {eval_std:.2f}")
+                if logger.episode_rewards:
+                    train_avg = np.mean(logger.episode_rewards[-100:])
+                    train_std = np.std(logger.episode_rewards[-100:])
+                    train_min = np.min(logger.episode_rewards[-100:])
+                    train_max = np.max(logger.episode_rewards[-100:])
+                    print(f"  Train Reward (last 100):  {train_avg:8.2f} +/- {train_std:.2f}")
+                    if config.VERBOSE >= 3:  # Détaillé
+                        print(f"  Train Range:              [{train_min:7.2f}, {train_max:7.2f}]")
+                
+                # Progression de l'évaluation
+                if len(logger.eval_rewards) > 1:
+                    improvement = eval_reward - logger.eval_rewards[-2]
+                    trend = "↑" if improvement > 0 else "↓" if improvement < 0 else "="
+                    print(f"  Improvement vs last eval: {improvement:+8.2f} {trend}")
+                
+                # Statistiques d'entraînement (seulement en mode Détaillé)
+                if config.VERBOSE >= 3:
+                    print(f"\nTraining Statistics:")
+                    print(f"  Total Episodes:           {episode_num}")
+                    print(f"  Replay Buffer Size:       {replay_buffer.size():,}")
+                    if logger.critic_losses:
+                        print(f"  Avg Critic Loss (100):    {np.mean(logger.critic_losses[-100:]):.4f}")
+                        print(f"  Avg Actor Loss (100):     {np.mean(logger.actor_losses[-100:]):.4f}")
+                
+                # Statistiques EAS
+                if use_eas and logger.archive_sizes and config.VERBOSE >= 2:
+                    print(f"\nEAS Statistics:")
+                    print(f"  Archive Size:             {logger.archive_sizes[-1]:,}")
+                    if config.VERBOSE >= 3:  # Détails complets
+                        if logger.q_filter_rates:
+                            q_filter_avg = np.mean(logger.q_filter_rates[-100:])
+                            print(f"  Q-Filter Accept Rate:     {q_filter_avg*100:.1f}%")
+                        if logger.q_normals and logger.q_evolveds:
+                            q_normal_avg = np.mean(logger.q_normals[-100:])
+                            q_evolved_avg = np.mean(logger.q_evolveds[-100:])
+                            q_improvement = q_evolved_avg - q_normal_avg
+                            print(f"  Q-Normal (avg):           {q_normal_avg:.2f}")
+                            print(f"  Q-Evolved (avg):          {q_evolved_avg:.2f}")
+                            print(f"  Q-Value Improvement:      {q_improvement:+.2f}")
+                        if logger.pso_improvements:
+                            pso_avg = np.mean(logger.pso_improvements[-100:])
+                            print(f"  PSO Improvement (avg):    {pso_avg:.4f}")
+                
+                # Temps
+                print(f"\nTiming:")
+                print(f"  Elapsed Time:             {format_time(elapsed)}")
+                print(f"  Speed:                    {timesteps_per_sec:.0f} steps/sec")
+                print(f"  ETA:                      {format_time(eta)}")
+                
+                print(f"{'='*70}\n")
         
         # Sauvegarder checkpoints si activé
         if config.SAVE_CHECKPOINTS and (t + 1) % config.CHECKPOINT_FREQ == 0:
             checkpoint_path = os.path.join(save_dir, f"{model_name}_checkpoint_{t+1}.pt")
             agent.save(checkpoint_path)
-            # Nettoyer la ligne avant le print
-            print('\r' + ' ' * 120 + '\r', end='')
-            print(f"Checkpoint saved at {t+1:,} timesteps")
+            if config.VERBOSE >= 1:  # Minimal et plus
+                # Nettoyer la ligne avant le print
+                print('\r' + ' ' * 120 + '\r', end='')
+                print(f"Checkpoint saved at {t+1:,} timesteps")
     
     # Nettoyer la barre de progression finale
     print('\r' + ' ' * 120 + '\r', end='')
@@ -276,16 +368,18 @@ def train_agent(env_name, use_eas, max_timesteps, eval_freq, seed,
     
     # Statistiques finales
     total_time = time.time() - start_time
-    print(f"\n{'='*70}")
-    print(f"Training complete!")
-    print(f"{'='*70}")
-    print(f"   Model: {model_path}")
-    print(f"   Total Episodes: {episode_num}")
-    print(f"   Total Time: {format_time(total_time)}")
-    print(f"   Speed: {max_timesteps/total_time:.0f} timesteps/sec")
-    if logger.eval_rewards:
-        print(f"   Final Eval Reward: {logger.eval_rewards[-1]:.2f}")
-    print(f"{'='*70}\n")
+    
+    if config.VERBOSE >= 1:  # Minimal et plus
+        print(f"\n{'='*70}")
+        print(f"Training complete!")
+        print(f"{'='*70}")
+        print(f"   Model: {model_path}")
+        print(f"   Total Episodes: {episode_num}")
+        print(f"   Total Time: {format_time(total_time)}")
+        print(f"   Speed: {max_timesteps/total_time:.0f} timesteps/sec")
+        if logger.eval_rewards:
+            print(f"   Final Eval Reward: {logger.eval_rewards[-1]:.2f}")
+        print(f"{'='*70}\n")
     
     return logger, model_name, action_history
 
@@ -366,10 +460,10 @@ def apply_cli_overrides(args):
     
     if args.no_plots:
         config.PLOT_PERFORMANCE = False
-        config.PLOT_COMPARISON = False
+        config.PLOT_COMPA3  # Mode détaillé
     
-    if args.verbose:
-        config.VERBOSE = True
+    if args.quiet:
+        config.VERBOSE = 0  # Mode silencieux
     
     if args.quiet:
         config.VERBOSE = False

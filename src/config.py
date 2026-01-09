@@ -71,7 +71,13 @@ PLOT_COMPARISON = True      # Comparaison TD3 vs EAS (si les deux)
 # ======================== OPTIONS AVANCÉES ===================
 SAVE_CHECKPOINTS = False    # Sauvegarder des checkpoints intermédiaires
 CHECKPOINT_FREQ = 100000    # Fréquence de sauvegarde (timesteps)
-VERBOSE = True              # Affichage détaillé pendant l'entraînement
+
+# Niveau de verbosité (0-3):
+#   0 = Silencieux (erreurs seulement)
+#   1 = Minimal (barre progression + évaluations résumées)
+#   2 = Normal (+ épisodes + évaluations détaillées)
+#   3 = Détaillé (+ architecture + toutes statistiques)
+VERBOSE = 2
 # =============================================================
 
 
@@ -88,6 +94,11 @@ def validate_config():
         raise ValueError(
             f"ERROR: MAX_TIMESTEPS ({MAX_TIMESTEPS}) doit être >= "
             f"START_TIMESTEPS ({START_TIMESTEPS})"
+        )
+    
+    if VERBOSE not in [0, 1, 2, 3]:
+        raise ValueError(
+            f"ERROR: VERBOSE doit être 0, 1, 2 ou 3 (got {VERBOSE})"
         )
     
     return True
