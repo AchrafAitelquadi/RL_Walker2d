@@ -17,9 +17,9 @@ import time
 # Ajouter le répertoire src au path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from algorithms import TD3, ReplayBuffer
-from utils import TrainingLogger, EnhancedPlotter, create_visualizations
-import config  # Importer la configuration
+from .algorithms import TD3, ReplayBuffer
+from .utils import TrainingLogger, EnhancedPlotter, create_visualizations
+from . import config  # Importer la configuration
 
 
 def format_time(seconds):
@@ -539,6 +539,9 @@ def main():
         }
         
         print(f"\n[OK] {algo_name} training complete!")
+        
+        # Sauvegarder les métriques en CSV
+        logger.save_to_csv(config.LOG_DIR, model_name.replace('.pt', ''))
     
     # ==================== VISUALISATIONS ====================
     

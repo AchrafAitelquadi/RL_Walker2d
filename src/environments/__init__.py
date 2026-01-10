@@ -1,7 +1,7 @@
 """
 Environments module
-Wrappers and custom environments if needed
 """
 
-# For future extensions, you can add custom environment wrappers here
-# Example: normalization wrappers, observation filters, etc.
+from .walker_env import make_walker_env, get_env_info
+
+__all__ = ['make_walker_env', 'get_env_info']

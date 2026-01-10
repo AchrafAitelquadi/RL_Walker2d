@@ -2,6 +2,9 @@
 Training Logger pour enregistrer toutes les métriques pendant l'entraînement
 """
 
+import pandas as pd
+import os
+
 
 class TrainingLogger:
     """
@@ -65,3 +68,62 @@ class TrainingLogger:
     def log_action(self, action_magnitude):
         """Enregistre la magnitude d'une action"""
         self.action_magnitudes.append(action_magnitude)
+    
+    def save_to_csv(self, save_dir, algorithm_name):
+        """
+        Sauvegarde toutes les métriques en fichiers CSV
+        
+        Args:
+            save_dir: Répertoire où sauvegarder les CSV
+            algorithm_name: Nom de l'algorithme (TD3 ou EAS-TD3)
+        """
+        os.makedirs(save_dir, exist_ok=True)
+        
+        # 1. Episode rewards
+        if self.episode_rewards:
+            df_episodes = pd.DataFrame({
+                'episode': range(1, len(self.episode_rewards) + 1),
+                'reward': self.episode_rewards
+            })
+            df_episodes.to_csv(f'{save_dir}/{algorithm_name}_episode_rewards.csv', index=False)
+        
+        # 2. Evaluation metrics
+        if self.eval_rewards:
+            df_eval = pd.DataFrame({
+                'timestep': self.eval_timesteps,
+                'eval_reward': self.eval_rewards,
+                'eval_std': self.eval_stds
+            })
+            df_eval.to_csv(f'{save_dir}/{algorithm_name}_evaluations.csv', index=False)
+        
+        # 3. Training losses
+        if self.critic_losses:
+            df_losses = pd.DataFrame({
+                'step': range(1, len(self.critic_losses) + 1),
+                'critic_loss': self.critic_losses,
+                'actor_loss': self.actor_losses,
+                'buffer_size': self.buffer_sizes
+            })
+            df_losses.to_csv(f'{save_dir}/{algorithm_name}_training_losses.csv', index=False)
+        
+        # 4. EAS metrics (if available)
+        if self.archive_sizes:
+            df_eas = pd.DataFrame({
+                'step': range(1, len(self.archive_sizes) + 1),
+                'archive_size': self.archive_sizes,
+                'q_filter_rate': self.q_filter_rates,
+                'q_value_normal': self.q_values_normal,
+                'q_value_evolved': self.q_values_evolved,
+                'pso_improvement': self.pso_improvements
+            })
+            df_eas.to_csv(f'{save_dir}/{algorithm_name}_eas_metrics.csv', index=False)
+        
+        # 5. Action magnitudes
+        if self.action_magnitudes:
+            df_actions = pd.DataFrame({
+                'step': range(1, len(self.action_magnitudes) + 1),
+                'action_magnitude': self.action_magnitudes
+            })
+            df_actions.to_csv(f'{save_dir}/{algorithm_name}_action_magnitudes.csv', index=False)
+        
+        print(f"  ✓ CSV files saved to {save_dir}/")
