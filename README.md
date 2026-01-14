@@ -251,12 +251,6 @@ robotic3/
 ├── videos/                       # Vidéos de simulation
 ├── tests/                        # Tests unitaires
 │   └── test_walker_env.py
-│
-├── docs/                         # Documentation
-│   ├── algorithms.md            # Détails TD3 et EAS-TD3
-│   ├── environment.md           # Spécifications Walker2d-v4
-│   └── docker-usage.md          # Guide Docker complet
-│
 ├── simulate.py                   # Script de simulation
 ├── requirements.txt              # Dépendances Python
 ├── Dockerfile                    # Configuration Docker
