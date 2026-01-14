@@ -126,4 +126,4 @@ class TrainingLogger:
             })
             df_actions.to_csv(f'{save_dir}/{algorithm_name}_action_magnitudes.csv', index=False)
         
-        print(f"  ✓ CSV files saved to {save_dir}/")
+        print(f"  [OK] CSV files saved to {save_dir}/")

@@ -546,13 +546,13 @@ def main():
     # ==================== VISUALISATIONS ====================
     
     if config.PLOT_PERFORMANCE or config.PLOT_COMPARISON:
-        print("\n" + "▶"*35)
+        print("\n" + "="*70)
         
         # Déterminer le type de visualisation
         if num_algorithms > 1 and config.PLOT_COMPARISON:
             # Plusieurs algorithmes: générer comparaison + plots individuels
             print("Generating comparison plots and individual plots")
-            print("▶"*35 + "\n")
+            print("="*70 + "\n")
             
             create_visualizations(
                 results['td3']['logger'],

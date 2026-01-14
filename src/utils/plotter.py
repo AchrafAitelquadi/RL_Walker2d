@@ -955,7 +955,7 @@ EAS-Specific:
             num_samples (int): Nombre d'échantillons par intervalle
         """
         if not action_history or len(action_history) < num_samples * num_intervals:
-            print("  ⚠ Not enough action data for distribution plot")
+            print("  [WARNING] Not enough action data for distribution plot")
             return
         
         # Créer les intervalles
@@ -1043,21 +1043,21 @@ EAS-Specific:
         print(f"\nGenerating plots for {model_name}...")
         
         self.plot_performance_analysis(logger, model_name)
-        print(f"  ✓ Performance analysis")
+        print(f"  [OK] Performance analysis")
         
         self.plot_learning_curves(logger, model_name)
-        print(f"  ✓ Learning curves")
+        print(f"  [OK] Learning curves")
         
         self.plot_exploration_analysis(logger, model_name)
-        print(f"  ✓ Exploration analysis")
+        print(f"  [OK] Exploration analysis")
         
         if use_eas:
             self.plot_eas_analysis(logger, model_name)
-            print(f"  ✓ EAS-specific analysis")
+            print(f"  [OK] EAS-specific analysis")
             
             if action_history:
                 self.plot_action_distribution_evolution(action_history, model_name)
-                print(f"  ✓ Action distribution evolution")
+                print(f"  [OK] Action distribution evolution")
         
         print(f"  All plots saved to {self.save_dir}/")
 
@@ -1085,6 +1085,6 @@ def create_visualizations(logger_td3, logger_eas, name_td3, name_eas,
     # Comparaison
     print("\nGenerating comparison plots...")
     plotter.plot_comparison(logger_td3, logger_eas, name_td3, name_eas)
-    print("  ✓ Comparison analysis")
+    print("  [OK] Comparison analysis")
     
-    print(f"\n✓ All visualizations complete!")
+    print(f"\n[OK] All visualizations complete!")

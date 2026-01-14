@@ -5,9 +5,7 @@ import torch.nn.functional as F
 import gymnasium as gym
 import argparse
 import os
-from collections import deque
 import glob
-from pathlib import Path
 
 
 # ======================== NETWORKS (same as training) ========================
@@ -77,7 +75,7 @@ class TD3:
         self.actor_target.load_state_dict(checkpoint['actor_target_state_dict'])
         self.critic.load_state_dict(checkpoint['critic_state_dict'])
         self.critic_target.load_state_dict(checkpoint['critic_target_state_dict'])
-        print(f"✓ Model loaded from {filename}")
+        print(f"[OK] Model loaded from {filename}")
         print(f"  Training iterations: {checkpoint.get('total_it', 'N/A')}")
 
 
@@ -195,7 +193,7 @@ def run_simulation(model_path, env_name="Walker2d-v4", num_episodes=10,
     """
     # Validate model exists
     if not os.path.exists(model_path):
-        print(f"\n❌ Model file not found: {model_path}")
+        print(f"\n[ERROR] Model file not found: {model_path}")
         print("\nSearching for available models...")
         models = list_available_models()
         if models:
@@ -304,7 +302,7 @@ def evaluate_agent_performance(model_path, env_name="Walker2d-v4",
         Statistics dictionary
     """
     if not os.path.exists(model_path):
-        print(f"\n❌ Model file not found: {model_path}")
+        print(f"\n[ERROR] Model file not found: {model_path}")
         list_available_models()
         return None
     
@@ -385,7 +383,7 @@ def compare_deterministic_vs_stochastic(model_path, env_name="Walker2d-v4",
         Tuple of (deterministic_rewards, stochastic_rewards)
     """
     if not os.path.exists(model_path):
-        print(f"\n❌ Model file not found: {model_path}")
+        print(f"\n[ERROR] Model file not found: {model_path}")
         list_available_models()
         return None, None
     
@@ -491,13 +489,13 @@ Examples:
         models = find_models()
         
         if not models:
-            print("\n❌ No trained models found.")
+            print("\\n[ERROR] No trained models found.")
             print("Train a model first using: python src/run_experiment.py")
             exit(1)
         
         # Use the first model found
         model_name, model_path = list(models.items())[0]
-        print(f"\n✓ Auto-selected model: {model_name}")
+        print(f"\\n[OK] Auto-selected model: {model_name}")
         print(f"  Path: {model_path}\n")
         args.model = model_path
     
